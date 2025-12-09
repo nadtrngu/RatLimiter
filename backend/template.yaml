@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sample SAM Template for RatLimiter
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 512
+    LoggingConfig:
+      LogFormat: JSON
+Resources:
+  RatLimiterFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: ./src/RatLimiter.Lambda/
+      Handler: RatLimiter.Lambda::RatLimiter.Lambda.Function::FunctionHandler
+      Runtime: dotnet8
+      Events:
+        CheckApi:
+          Type: Api
+          Properties:
+            Path: /v1/check
+            Method: post
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+Outputs:
+  RatLimiterLambdaApi:
+    Description: API Gateway endpoint URL for Prod stage for RatLimiter /v1/check
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/Prod/v1/check"
+
+  RatLimiterFunctionArn:
+    Description: RatLimiter Lambda Function ARN
+    Value: !GetAtt RatLimiterFunction.Arn
+
+  RatLimiterFunctionIamRole:
+    Description: Implicit IAM Role created for RatLimiter Lambda function
+    Value: !GetAtt RatLimiterFunctionRole.Arn
+
