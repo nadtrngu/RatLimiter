@@ -1,57 +1,47 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net.Http;
 using System.Text.Json;
 using Xunit;
 using Amazon.Lambda.TestUtilities;
 using Amazon.Lambda.APIGatewayEvents;
+using System.Threading.Tasks;
+using RatLimiter.Lambda.RateLimiting.Models;
 
 namespace RatLimiter.Lambda.Tests;
 
 public class FunctionTest
 {
-  private static readonly HttpClient client = new HttpClient();
+    [Fact]
+    public async Task TestRatLimiterFunctionHandler_HappyPath()
+    {
+        var request = new APIGatewayProxyRequest();
+        var context = new TestLambdaContext();
 
-  private static async Task<string> GetCallingIP()
-  {
-          client.DefaultRequestHeaders.Accept.Clear();
-          client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+        var body = new CheckRequest()
+        {
+            ApiKey = "RAT-ABC-123",
+            Cost = 10
+        };
 
-          var stringTask = client.GetStringAsync("http://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext:false);
+        request.Body = JsonSerializer.Serialize(body);
 
-          var msg = await stringTask;
-          return msg.Replace("\n","");
-  }
+        var decision = new RateLimitDecision() { Limit = 100, Allowed = true, RemainingTokens = 100 };
 
-  [Fact]
-  public async Task TestRatLimiterFunctionHandler()
-  {
-          var request = new APIGatewayProxyRequest();
-          var context = new TestLambdaContext();
-          string location = GetCallingIP().Result;
-          Dictionary<string, string> body = new Dictionary<string, string>
-          {
-              { "message", "hello world" },
-              { "location", location },
-          };
+        var expectedResponse = new APIGatewayProxyResponse
+        {
+            Body = JsonSerializer.Serialize(decision),
+            StatusCode = 200,
+            Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+        };
 
-          var expectedResponse = new APIGatewayProxyResponse
-          {
-              Body = JsonSerializer.Serialize(body),
-              StatusCode = 200,
-              Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
-          };
+        var function = new Function();
+        var response = await function.FunctionHandler(request, context);
 
-          var function = new Function();
-          var response = await function.FunctionHandler(request, context);
+        Console.WriteLine("Lambda Response: \n" + response.Body);
+        Console.WriteLine("Expected Response: \n" + expectedResponse.Body);
 
-          Console.WriteLine("Lambda Response: \n" + response.Body);
-          Console.WriteLine("Expected Response: \n" + expectedResponse.Body);
-
-          Assert.Equal(expectedResponse.Body, response.Body);
-          Assert.Equal(expectedResponse.Headers, response.Headers);
-          Assert.Equal(expectedResponse.StatusCode, response.StatusCode);
-  }
+        Assert.Equal(expectedResponse.Body, response.Body);
+        Assert.Equal(expectedResponse.Headers, response.Headers);
+        Assert.Equal(expectedResponse.StatusCode, response.StatusCode);
+    }
 }

@@ -201,6 +201,7 @@ ipch/
 *.vsp
 *.vspx
 *.sap
+.vs/
 
 # TFS 2012 Local Workspace
 $tf/
@@ -396,6 +397,10 @@ __pycache__/
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+
+# saml
+.aws-sam/
+**/.aws-sam/
 
 ### VisualStudio Patch ###
 # By default, sensitive information, such as encrypted password

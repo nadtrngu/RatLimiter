@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  Sample SAM Template for RatLimiter
+Description: RatLimiter is a Rate Limiting service
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -23,7 +22,15 @@ Resources:
           Properties:
             Path: /v1/check
             Method: post
-
+        CreateApiKey:
+          Type: Api
+          Properties:
+            Path: /v1/api-keys
+            Method: post
+      Environment:
+        Variables:
+          REDIS_CONNECTION_STRING: "127.0.0.1:6379"
+          ADMIN_TOKEN: RAT-LIMITER-5zb4jt
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
