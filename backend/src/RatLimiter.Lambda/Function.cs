@@ -63,9 +63,6 @@ public class Function
     {
         if (request.Path == "/v1/check") return null;
 
-        if (string.IsNullOrEmpty(request.Body))
-            return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - Invalid or missing arguments." } });
-
         if (request?.Headers == null || !request.Headers.TryGetValue("X-Admin-Token", out var adminHeader) || adminHeader != Environment.GetEnvironmentVariable("ADMIN_TOKEN"))
             return Helpers.GetResponseObj(401, new Dictionary<string, string>() { { "message", "Unauthorized - Missing Admin Token." } });
 
