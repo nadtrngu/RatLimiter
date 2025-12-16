@@ -62,7 +62,7 @@ public class FunctionService : IFunctionService
         return Helpers.GetResponseObj(200, dict);
     }
 
-    private static TokenBucketConfig? MapTokenBucketConfig(RedisValue[] redisValue)
+    private static BucketConfigDTO? MapTokenBucketConfig(RedisValue[] redisValue)
     {
         if (redisValue.Length < 6) return null;
         var name = redisValue[0];
@@ -81,14 +81,14 @@ public class FunctionService : IFunctionService
             string.IsNullOrEmpty(refillRate) ||
             string.IsNullOrEmpty(createdAt)) return null;
 
-        return new TokenBucketConfig()
+        return new BucketConfigDTO()
         {
             Name = name,
-            Algorithm = algorithmEnum,
+            Algorithm = Enum.GetName(algorithmEnum),
             Capacity = (int)capacity,
-            CreatedAt = (long)createdAt,
+            CreatedAt = DateTimeOffset.FromUnixTimeSeconds((long)createdAt),
             RefillRate = (int)refillRate,
-            Status = statusEnum
+            Status = Enum.GetName(statusEnum)
         };
     }
 }
