@@ -41,6 +41,53 @@ public class RedisTokenBucketStore : ITokenBucketStore
         };
     }
 
+    public async Task<TokenBucketConfig?> GetBucketConfigAsync(string apiKey)
+    {
+        var key = $"rat:config:{apiKey}";
+
+        var db = redis.GetDatabase();
+        var allKeys = await db.HashGetAllAsync(key);
+        if (allKeys.Length == 0) return null;
+
+        var bucket = allKeys.ToDictionary(e => (string)e.Name, e => e.Value);
+
+        if (!bucket.TryGetValue("Name", out var name) ||
+           !bucket.TryGetValue("Status", out var status) ||
+           !Enum.TryParse(status, true, out Status statusParsed) ||
+           !bucket.TryGetValue("Algorithm", out var algorithm) ||
+           !Enum.TryParse(algorithm, true, out Algorithm algoParsed) ||
+           !bucket.TryGetValue("RefillRate", out var refillRate) ||
+           !bucket.TryGetValue("Capacity", out var capacity) ||
+           !bucket.TryGetValue("CreatedAt", out var createdAt) ||
+           !bucket.TryGetValue("UpdatedAt", out var updatedAt)) return null;
+
+        bucket.TryGetValue("Description", out var description);
+
+        return new TokenBucketConfig()
+        {
+            Capacity = (int)capacity,
+            Algorithm = algoParsed,
+            Description = description,
+            Name = name,
+            Status = statusParsed,
+            CreatedAt = (long)createdAt,
+            UpdatedAt = (long)updatedAt,
+            RefillRate = (int)refillRate
+        };
+    }
+
+    public async Task<IEnumerable<string>> GetAllAsync()
+    {
+        var response = new List<string>();
+        var key = "rat:api-keys";
+        var db = redis.GetDatabase();
+        var allKeys = await db.SetMembersAsync(key);
+
+        if (allKeys == null || allKeys.Length == 0) return response;
+
+        return allKeys.ToStringArray();
+    }
+
     public async Task SaveAsync(string apiKey, TokenBucketState tokenBucketState, TokenBucketConfig? bucketConfig = null)
     {
         var bucketKey = $"rat:bucket:{apiKey}";
@@ -63,5 +110,14 @@ public class RedisTokenBucketStore : ITokenBucketStore
         var apiKeysStorage = "rat:api-keys";
         var db = redis.GetDatabase();
         await db.SetAddAsync(apiKeysStorage, apiKey);
+    }
+
+    public async Task<RedisValue[]> GetTokenBucketConfigAsync(string apiKey)
+    {
+        var configKey = $"rat:config:{apiKey}";
+        var db = redis.GetDatabase();
+
+        RedisValue[] fields = [new RedisValue("Name"), new RedisValue("Status"), new RedisValue("Algorithm"), new RedisValue("Capacity"), new RedisValue("RefillRate"), new RedisValue("CreatedAt")];
+        return await db.HashGetAsync(configKey, fields);
     }
 }

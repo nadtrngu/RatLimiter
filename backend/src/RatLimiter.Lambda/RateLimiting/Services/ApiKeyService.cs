@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using RatLimiter.Lambda.RateLimiting.Interfaces;
 using RatLimiter.Lambda.RateLimiting.Models;
+using StackExchange.Redis;
 
 namespace RatLimiter.Lambda.RateLimiting.Services;
 public class ApiKeyService : IApiKeyService
@@ -38,6 +39,16 @@ public class ApiKeyService : IApiKeyService
         await _store.SaveAsync(apiKey, bucketState, bucketConfig);
         await _store.SaveNewKey(apiKey);
         return apiKey;
+    }
+
+    public async Task<IEnumerable<string>> GetAllKeysAsync()
+    {
+        return await _store.GetAllAsync();
+    }
+
+    public async Task<RedisValue[]> GetTokenBucketConfigAsync(string apiKey)
+    {
+        return await _store.GetTokenBucketConfigAsync(apiKey);
     }
 
     private static string GetRandomString()

@@ -33,6 +33,10 @@ public class Function
                     {
                         return await _functionService.CreateNewApiKeyAsync(request);
                     }
+                    if (request.HttpMethod == "GET")
+                    {
+                        return await _functionService.GetAllKeysAsync(request);
+                    }
 
                     return Helpers.GetResponseObj(405, new Dictionary<string, string>() { { "message", "Method not allowed." } });
 
