@@ -8,13 +8,9 @@ public class RedisTokenBucketStore : ITokenBucketStore
 
     private readonly ConnectionMultiplexer redis;
 
-    public RedisTokenBucketStore()
+    public RedisTokenBucketStore(ConnectionMultiplexer multiplexer)
     {
-        string redisConnectionString = Environment.GetEnvironmentVariable("REDIS_CONNECTION_STRING");
-        if (string.IsNullOrEmpty(redisConnectionString))
-            throw new ArgumentNullException(nameof(redisConnectionString));
-
-        redis = ConnectionMultiplexer.Connect(redisConnectionString);
+        redis = multiplexer;
     }
 
     public async Task<TokenBucketState?> GetAsync(string apiKey)
@@ -78,13 +74,11 @@ public class RedisTokenBucketStore : ITokenBucketStore
 
     public async Task<IEnumerable<string>> GetAllAsync()
     {
-        var response = new List<string>();
         var key = "rat:api-keys";
         var db = redis.GetDatabase();
         var allKeys = await db.SetMembersAsync(key);
 
-        if (allKeys == null || allKeys.Length == 0) return response;
-
+        if (allKeys.Length == 0) return Enumerable.Empty<string>();
         return allKeys.ToStringArray();
     }
 
