@@ -7,5 +7,6 @@ public class BucketConfigDTO
     public string Status { get; set; }
     public int RefillRate { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public string Description { get; set; }
 }
 

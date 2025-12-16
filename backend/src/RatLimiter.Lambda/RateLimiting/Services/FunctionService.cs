@@ -49,7 +49,6 @@ public class FunctionService : IFunctionService
 
     public async Task<APIGatewayProxyResponse> GetAllKeysAsync(APIGatewayProxyRequest request)
     {
-        Dictionary<string, TokenBucketConfig> KeysMetadata = new();
         var allKeys = await _keyService.GetAllKeysAsync();
 
         if (allKeys == null) return Helpers.GetResponseObj(200, new Dictionary<string,  object>());
@@ -62,33 +61,52 @@ public class FunctionService : IFunctionService
         return Helpers.GetResponseObj(200, dict);
     }
 
-    private static BucketConfigDTO? MapTokenBucketConfig(RedisValue[] redisValue)
+    public async Task<APIGatewayProxyResponse> GetKeyDetailsAsync(APIGatewayProxyRequest request)
     {
-        if (redisValue.Length < 6) return null;
-        var name = redisValue[0];
-        var status = redisValue[1];
-        var algorithm = redisValue[2];
-        var capacity = redisValue[3];
-        var refillRate = redisValue[4];
-        var createdAt = redisValue[5];
+        if (request.PathParameters == null || !request.PathParameters.TryGetValue("key", out var apiKey))
+           return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - Invalid or missing arguments." } });
 
-        if (string.IsNullOrEmpty(name) ||
-            string.IsNullOrEmpty(status) ||
+        var bucketInfo = await _keyService.GetTokenBucketConfigAsync(apiKey);
+
+        if (bucketInfo == null) return Helpers.GetResponseObj(404, new Dictionary<string, string>() { { "message", "Api key not found." } });
+
+        var mappedData = MapTokenBucketConfig(bucketInfo);
+
+        if (mappedData == null) return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - Invalid or missing arguments." } });
+
+        return Helpers.GetResponseObj(200, mappedData);
+    }
+
+    private static BucketConfigDTO? MapTokenBucketConfig(RedisValue[] values)
+    {
+        if (values == null || values.Length < 6) return null;
+
+        var name       = values[0];
+        var status     = values[1];
+        var algorithm  = values[2];
+        var capacity   = values[3];
+        var refillRate = values[4];
+        var createdAt  = values[5];
+        var description = values.Length > 6 ? values[6] : RedisValue.Null;
+
+        if (name.IsNullOrEmpty ||
+            status.IsNullOrEmpty ||
             !Enum.TryParse(status, true, out Status statusEnum) ||
-            string.IsNullOrEmpty(algorithm) ||
+            algorithm.IsNullOrEmpty ||
             !Enum.TryParse(algorithm, true, out Algorithm algorithmEnum) ||
-            string.IsNullOrEmpty(capacity) ||
-            string.IsNullOrEmpty(refillRate) ||
-            string.IsNullOrEmpty(createdAt)) return null;
+            capacity.IsNullOrEmpty ||
+            refillRate.IsNullOrEmpty ||
+            createdAt.IsNullOrEmpty) return null;
 
         return new BucketConfigDTO()
         {
-            Name = name,
-            Algorithm = Enum.GetName(algorithmEnum),
+            Name = (string)name!,
+            Algorithm = Enum.GetName(algorithmEnum) ?? algorithmEnum.ToString(),
             Capacity = (int)capacity,
             CreatedAt = DateTimeOffset.FromUnixTimeSeconds((long)createdAt),
             RefillRate = (int)refillRate,
-            Status = Enum.GetName(statusEnum)
+            Status = Enum.GetName(statusEnum) ?? statusEnum.ToString(),
+            Description = description.IsNull ? string.Empty : (string)description!
         };
     }
 }

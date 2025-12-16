@@ -111,7 +111,7 @@ public class RedisTokenBucketStore : ITokenBucketStore
         var configKey = $"rat:config:{apiKey}";
         var db = redis.GetDatabase();
 
-        RedisValue[] fields = [new RedisValue("Name"), new RedisValue("Status"), new RedisValue("Algorithm"), new RedisValue("Capacity"), new RedisValue("RefillRate"), new RedisValue("CreatedAt")];
+        RedisValue[] fields = [new RedisValue("Name"), new RedisValue("Status"), new RedisValue("Algorithm"), new RedisValue("Capacity"), new RedisValue("RefillRate"), new RedisValue("CreatedAt"), new RedisValue("Description")];
         return await db.HashGetAsync(configKey, fields);
     }
 }

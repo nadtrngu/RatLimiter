@@ -52,7 +52,7 @@ public class TokenBucketRateLimiter : IRateLimiter
     {
         if (state.Capacity == state.NumberOfTokens) return false;
 
-        var elapsedSeconds = (now.ToUnixTimeSeconds() - state.LastRefill);
+        var elapsedSeconds = Math.Max(0, now.ToUnixTimeSeconds() - state.LastRefill);
         var tokensToRefill = (int)(elapsedSeconds * state.RefillRate);
 
         if (tokensToRefill > 0)

@@ -25,7 +25,7 @@ public class Function
             if (checkHeader != null)
                 return checkHeader;
 
-            switch (request.Path)
+            switch (request.Resource)
             {
                 case "/v1/api-keys":
 
@@ -42,6 +42,12 @@ public class Function
 
                 case "/v1/check":
                     return await _functionService.CheckAsync(request);
+
+                case "/v1/api-keys/{key}":
+                    if (request.HttpMethod == "GET")
+                        return await _functionService.GetKeyDetailsAsync(request);
+
+                    return Helpers.GetResponseObj(405, new Dictionary<string, string>() { { "message", "Method not allowed." } });
 
                 default:
                     return Helpers.GetResponseObj(404, new Dictionary<string, string>() { { "message", "Not Found." } });
@@ -63,8 +69,12 @@ public class Function
     {
         if (request.Path == "/v1/check") return null;
 
-        if (request?.Headers == null || !request.Headers.TryGetValue("X-Admin-Token", out var adminHeader) || adminHeader != Environment.GetEnvironmentVariable("ADMIN_TOKEN"))
+        if (request.Headers == null ||
+            !request.Headers.TryGetValue("X-Admin-Token", out var adminHeader) ||
+            adminHeader != Environment.GetEnvironmentVariable("ADMIN_TOKEN"))
+        {
             return Helpers.GetResponseObj(401, new Dictionary<string, string>() { { "message", "Unauthorized - Missing Admin Token." } });
+        }
 
         return null;
     }

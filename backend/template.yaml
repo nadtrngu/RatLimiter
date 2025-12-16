@@ -32,6 +32,11 @@ Resources:
           Properties:
             Path: /v1/api-keys
             Method: get
+        GetKeyDetails:
+          Type: Api
+          Properties:
+            Path: /v1/api-keys/{key}
+            Method: get
       Environment:
         Variables:
           REDIS_CONNECTION_STRING: "host.docker.internal:6379"

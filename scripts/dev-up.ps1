@@ -62,7 +62,7 @@ $envObj = @{
   }
 }
 
-$json = $envObj | ConvertTo-Json -Depth 5
+$json = $envObj | ConvertTo-Json
 
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText($EnvJson, $json, $utf8NoBom)
