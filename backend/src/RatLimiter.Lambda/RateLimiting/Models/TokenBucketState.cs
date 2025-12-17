@@ -1,4 +1,5 @@
 ﻿namespace RatLimiter.Lambda.RateLimiting.Models;
+
 public class TokenBucketState
 {
     public int Capacity { get; set; }

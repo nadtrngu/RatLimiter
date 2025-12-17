@@ -51,6 +51,15 @@ public class ApiKeyService : IApiKeyService
         return await _store.GetTokenBucketConfigAsync(apiKey);
     }
 
+    public async Task UpdateKeyLimitAsync(string apiKey, LimitUpdateRequest updateLimitRequest)
+    {
+        var existing = await _store.GetBucketStateAsync(apiKey);
+        if (existing is null)
+            throw new KeyNotFoundException();
+        
+        await _store.UpdateBucketLimitAsync(apiKey, updateLimitRequest, existing);
+    }
+
     private static string GetRandomString()
     {
         string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

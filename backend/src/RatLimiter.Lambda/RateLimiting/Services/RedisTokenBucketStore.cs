@@ -72,6 +72,30 @@ public class RedisTokenBucketStore : ITokenBucketStore
         };
     }
 
+    public async Task<TokenBucketState?> GetBucketStateAsync(string apiKey)
+    {
+        var key = $"rat:bucket:{apiKey}";
+
+        var db = redis.GetDatabase();
+        var allKeys = await db.HashGetAllAsync(key);
+        if (allKeys.Length == 0) return null;
+
+        var bucket = allKeys.ToDictionary(e => (string)e.Name, e => e.Value);
+
+        if (!bucket.TryGetValue("RefillRate", out var refillRate) ||
+           !bucket.TryGetValue("Capacity", out var capacity) ||
+           !bucket.TryGetValue("LastRefill", out var lastRefill) ||
+           !bucket.TryGetValue("NumberOfTokens", out var numberOfTokens)) return null;
+
+        return new TokenBucketState()
+        {
+            Capacity = (int)capacity,
+            LastRefill = (int)lastRefill,
+            NumberOfTokens = (int)numberOfTokens,
+            RefillRate = (int)refillRate
+        };
+    }
+
     public async Task<IEnumerable<string>> GetAllAsync()
     {
         var key = "rat:api-keys";
@@ -113,5 +137,19 @@ public class RedisTokenBucketStore : ITokenBucketStore
 
         RedisValue[] fields = [new RedisValue("Name"), new RedisValue("Status"), new RedisValue("Algorithm"), new RedisValue("Capacity"), new RedisValue("RefillRate"), new RedisValue("CreatedAt"), new RedisValue("Description")];
         return await db.HashGetAsync(configKey, fields);
+    }
+
+    public async Task UpdateBucketLimitAsync(string apiKey, LimitUpdateRequest updateLimitRequest, TokenBucketState existing)
+    {
+        var bucketKey = $"rat:bucket:{apiKey}";
+        var configKey = $"rat:config:{apiKey}";
+
+        var db = redis.GetDatabase();
+
+        var numberOfTokens = Math.Min(updateLimitRequest.Capacity, existing.NumberOfTokens);
+
+        await db.HashSetAsync(bucketKey, [new("Capacity", updateLimitRequest.Capacity), new("RefillRate", updateLimitRequest.RefillRate), new("NumberOfTokens", numberOfTokens)]);
+        await db.HashSetAsync(configKey, [new("Capacity", updateLimitRequest.Capacity), new("RefillRate", updateLimitRequest.RefillRate),
+                                          new("Algorithm", updateLimitRequest.Algorithm.ToString()), new("UpdatedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds())]);
     }
 }

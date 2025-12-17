@@ -37,6 +37,11 @@ Resources:
           Properties:
             Path: /v1/api-keys/{key}
             Method: get
+        UpdateLimit:
+          Type: Api
+          Properties:
+            Path: /v1/api-keys/{key}/limits
+            Method: put
       Environment:
         Variables:
           REDIS_CONNECTION_STRING: "host.docker.internal:6379"

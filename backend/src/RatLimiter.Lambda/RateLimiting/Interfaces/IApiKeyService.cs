@@ -7,4 +7,5 @@ public interface IApiKeyService
     Task<string> CreateAsync(string name, Status status, string? description = null, int capacity = 100, int refillRate = 5, Algorithm algorithm = Algorithm.TokenBucket);
     Task<IEnumerable<string>> GetAllKeysAsync();
     Task<RedisValue[]> GetTokenBucketConfigAsync(string apiKey);
+    Task UpdateKeyLimitAsync(string apiKey, LimitUpdateRequest updateLimitRequest);
 }

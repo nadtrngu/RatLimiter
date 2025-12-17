@@ -7,5 +7,6 @@ public interface IFunctionService
     Task<APIGatewayProxyResponse> CreateNewApiKeyAsync(APIGatewayProxyRequest request);
     Task<APIGatewayProxyResponse> GetAllKeysAsync(APIGatewayProxyRequest request);
     Task<APIGatewayProxyResponse> GetKeyDetailsAsync(APIGatewayProxyRequest request);
+    Task<APIGatewayProxyResponse> UpdateKeyLimitAsync(APIGatewayProxyRequest request);
 }
 

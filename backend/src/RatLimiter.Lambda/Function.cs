@@ -49,6 +49,12 @@ public class Function
 
                     return Helpers.GetResponseObj(405, new Dictionary<string, string>() { { "message", "Method not allowed." } });
 
+                case "/v1/api-keys/{key}/limits":
+                    if (request.HttpMethod == "PUT")
+                        return await _functionService.UpdateKeyLimitAsync(request);
+
+                    return Helpers.GetResponseObj(405, new Dictionary<string, string>() { { "message", "Method not allowed." } });
+
                 default:
                     return Helpers.GetResponseObj(404, new Dictionary<string, string>() { { "message", "Not Found." } });
             }
@@ -67,7 +73,7 @@ public class Function
 
     private static APIGatewayProxyResponse? RequireAdminOrNull(APIGatewayProxyRequest request)
     {
-        if (request.Path == "/v1/check") return null;
+        if (request.Resource == "/v1/check") return null;
 
         if (request.Headers == null ||
             !request.Headers.TryGetValue("X-Admin-Token", out var adminHeader) ||

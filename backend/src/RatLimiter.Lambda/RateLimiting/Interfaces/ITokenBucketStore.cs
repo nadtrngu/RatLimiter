@@ -10,4 +10,6 @@ public interface ITokenBucketStore
     Task<IEnumerable<string>> GetAllAsync();
     Task<TokenBucketConfig?> GetBucketConfigAsync(string apiKey);
     Task<RedisValue[]> GetTokenBucketConfigAsync(string apiKey);
+    Task UpdateBucketLimitAsync(string apiKey, LimitUpdateRequest updateLimitRequest, TokenBucketState existing);
+    Task<TokenBucketState?> GetBucketStateAsync(string apiKey);
 }

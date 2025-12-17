@@ -1,4 +1,5 @@
 ﻿namespace RatLimiter.Lambda.RateLimiting.Models;
+
 public class BucketConfigDTO
 {
     public string Name { get; set; }

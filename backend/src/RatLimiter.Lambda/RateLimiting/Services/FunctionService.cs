@@ -77,6 +77,23 @@ public class FunctionService : IFunctionService
         return Helpers.GetResponseObj(200, mappedData);
     }
 
+    public async Task<APIGatewayProxyResponse> UpdateKeyLimitAsync(APIGatewayProxyRequest request)
+    {
+        if (request.PathParameters == null || !request.PathParameters.TryGetValue("key", out var apiKey))
+            return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - Invalid or missing arguments." } });
+
+        var updateLimitRequest = JsonSerializer.Deserialize<LimitUpdateRequest>(request.Body);
+
+        if (updateLimitRequest is null || updateLimitRequest.Capacity <= 0 || updateLimitRequest.RefillRate < 0)
+        {
+            return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - Invalid or missing arguments." } });
+        }
+
+        await _keyService.UpdateKeyLimitAsync(apiKey, updateLimitRequest);
+
+        return Helpers.GetResponseObj(204, null);
+    }
+
     private static BucketConfigDTO? MapTokenBucketConfig(RedisValue[] values)
     {
         if (values == null || values.Length < 6) return null;
