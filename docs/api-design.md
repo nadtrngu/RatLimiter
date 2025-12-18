@@ -134,7 +134,7 @@ Request:
 - `capacity` (int, required)
 
 Response:
-- 200 OK
+- 204 No Content
 - 400 Bad Request - invalid payload
 - 401 Unauthorized - missing or invalid admin token
 - 404 Not Found - API key not found

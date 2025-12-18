@@ -68,7 +68,7 @@ public class FunctionService : IFunctionService
 
         var bucketInfo = await _keyService.GetTokenBucketConfigAsync(apiKey);
 
-        if (bucketInfo == null) return Helpers.GetResponseObj(404, new Dictionary<string, string>() { { "message", "Api key not found." } });
+        if (bucketInfo == null || bucketInfo.Length == 0) return Helpers.GetResponseObj(404, new Dictionary<string, string>() { { "message", "Api key not found." } });
 
         var mappedData = MapTokenBucketConfig(bucketInfo);
 
