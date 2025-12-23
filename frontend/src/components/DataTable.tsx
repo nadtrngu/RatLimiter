@@ -6,12 +6,16 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import type { BucketConfigDTO } from "../types/BucketConfigDTO";
+import { EditOutlined } from "@mui/icons-material";
+import { IconButton } from "@mui/material";
+import type { KeyEditValue } from "../types/KeyEditValue";
 
 type DataTableProps = {
   rows: Record<string, BucketConfigDTO>;
+  setEditKey: React.Dispatch<React.SetStateAction<KeyEditValue | null>>;
 };
 
-function DataTable({ rows }: DataTableProps) {
+function DataTable({ rows, setEditKey }: DataTableProps) {
   const entries = Object.entries(rows);
 
   if (entries.length === 0) {
@@ -34,6 +38,7 @@ function DataTable({ rows }: DataTableProps) {
             <TableCell>Status</TableCell>
             <TableCell>Algorithm</TableCell>
             <TableCell>Created</TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -47,8 +52,25 @@ function DataTable({ rows }: DataTableProps) {
               <TableCell>{cfg.Algorithm}</TableCell>
               <TableCell>
                 {cfg.CreatedAt
-                  ? new Date(cfg.CreatedAt).toLocaleString()
+                  ? new Date(cfg.CreatedAt).toLocaleDateString()
                   : "-"}
+              </TableCell>
+              <TableCell>
+                <IconButton
+                  size="small"
+                  onClick={() =>
+                    setEditKey({
+                      apiKey,
+                      valuesToUpdate: {
+                        Capacity: cfg.Capacity,
+                        RefillRate: cfg.RefillRate,
+                        Algorithm: 0
+                      }
+                    })
+                  }
+                >
+                  <EditOutlined fontSize="small" />
+                </IconButton>
               </TableCell>
             </TableRow>
           ))}

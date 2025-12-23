@@ -1,5 +1,5 @@
 export interface LimitUpdateRequest {
-  capacity: number;
-  refillRate: number;
-  algorithm?: 'TokenBucket';
+  Capacity: number;
+  RefillRate: number;
+  Algorithm: number;
 }
