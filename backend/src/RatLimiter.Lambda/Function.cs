@@ -21,6 +21,9 @@ public class Function
     {
         try
         {
+            if (request.HttpMethod == "OPTIONS")
+                return Helpers.GetCorsPreflight();
+            
             var checkHeader = RequireAdminOrNull(request);
             if (checkHeader != null)
                 return checkHeader;
@@ -73,7 +76,7 @@ public class Function
 
     private static APIGatewayProxyResponse? RequireAdminOrNull(APIGatewayProxyRequest request)
     {
-        if (request.Resource == "/v1/check") return null;
+        if (request.Resource == "/v1/check" || request.HttpMethod == "OPTIONS") return null;
 
         if (request.Headers == null ||
             !request.Headers.TryGetValue("X-Admin-Token", out var adminHeader) ||
