@@ -1,9 +1,9 @@
 export interface BucketConfigDTO {
-  name: string;
-  algorithm: string;
-  capacity: number;
-  status: string;
-  refillRate: number;
-  createdAt: string; // ISO string from DateTimeOffset
-  description: string;
+  Name: string;
+  Algorithm: string;
+  Capacity: number;
+  Status: string;
+  RefillRate: number;
+  CreatedAt: string; // ISO string from DateTimeOffset
+  Description: string;
 }

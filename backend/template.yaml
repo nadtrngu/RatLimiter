@@ -9,6 +9,12 @@ Globals:
     MemorySize: 512
     LoggingConfig:
       LogFormat: JSON
+  Api:
+    Cors:
+      # For local dev you can be permissive:
+      AllowOrigin: "'http://localhost:5173'"
+      AllowHeaders: "'Content-Type,X-Admin-Token'"
+      AllowMethods: "'GET,POST,PUT,OPTIONS'"
 Resources:
   RatLimiterFunction:
     Type: AWS::Serverless::Function 
