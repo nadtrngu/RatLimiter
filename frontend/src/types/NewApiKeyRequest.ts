@@ -1,8 +1,8 @@
 export interface NewApiKeyRequest {
-  name: string;
-  description?: string | null;
-  status: 'ACTIVE' | 'DISABLED';
-  algorithm?: 'TokenBucket';
-  refillRate?: number;
-  capacity?: number;
+  Name: string;
+  Description?: string | null;
+  Status: number;
+  Algorithm?: 0;
+  RefillRate?: number;
+  Capacity?: number;
 }
