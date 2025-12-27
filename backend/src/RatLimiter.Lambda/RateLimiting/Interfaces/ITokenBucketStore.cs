@@ -12,4 +12,6 @@ public interface ITokenBucketStore
     Task<RedisValue[]> GetTokenBucketConfigAsync(string apiKey);
     Task UpdateBucketLimitAsync(string apiKey, LimitUpdateRequest updateLimitRequest, TokenBucketState existing);
     Task<TokenBucketState?> GetBucketStateAsync(string apiKey);
+    Task RecordAsync(string apiKey, bool isAllowed, DateTimeOffset now);
+    Task<SortedDictionary<DateTimeOffset, MetricPoint>> GetRecordAsync(string apiKey, DateTimeOffset from, DateTimeOffset to);
 }

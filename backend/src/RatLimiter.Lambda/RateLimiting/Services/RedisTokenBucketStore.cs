@@ -152,4 +152,63 @@ public class RedisTokenBucketStore : ITokenBucketStore
         await db.HashSetAsync(configKey, [new("Capacity", updateLimitRequest.Capacity), new("RefillRate", updateLimitRequest.RefillRate),
                                           new("Algorithm", updateLimitRequest.Algorithm.ToString()), new("UpdatedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds())]);
     }
+
+    public async Task RecordAsync(string apiKey, bool isAllowed, DateTimeOffset now)
+    {
+        var bucket = now.ToUniversalTime();
+        bucket = new DateTimeOffset(bucket.Year, bucket.Month, bucket.Day, bucket.Hour, 0, 0, TimeSpan.Zero);
+
+        var bucketKey = $"rat:metrics:{apiKey}:{bucket:yyyyMMddHH}";
+
+        var db = redis.GetDatabase();
+        var field = isAllowed ? "Allowed" : "Throttled";
+
+        await db.HashIncrementAsync(bucketKey, field, 1);
+        await db.KeyExpireAsync(bucketKey, TimeSpan.FromDays(7));
+    }
+
+    public async Task<SortedDictionary<DateTimeOffset, MetricPoint>> GetRecordAsync(string apiKey, DateTimeOffset from, DateTimeOffset to)
+    {
+        SortedDictionary<DateTimeOffset, MetricPoint> response = new();
+
+        var end = to.ToUniversalTime();
+        var start = from.ToUniversalTime();
+
+        var runner = new DateTimeOffset(start.Year, start.Month, start.Day, start.Hour, 0, 0, TimeSpan.Zero);
+
+        var db = redis.GetDatabase();
+        var tasks = new List<Task<(DateTimeOffset ts, HashEntry[] hash)>>();
+
+        while (runner <= end)
+        {
+            var ts = runner;
+            var bucketKey = $"rat:metrics:{apiKey}:{ts:yyyyMMddHH}";
+
+            var task = db.HashGetAllAsync(bucketKey).ContinueWith(t => (ts, t.Result));
+            tasks.Add(task);
+
+            runner = runner.AddHours(1);
+        }
+
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var (ts, hash) in results)
+        {
+            long allowed = 0, throttled = 0;
+
+            if (hash.Length > 0)
+            {
+                var dict = hash.ToDictionary(h => (string)h.Name, h => h.Value);
+                if (dict.TryGetValue("Allowed", out var allowedCount))
+                    allowed = (long)allowedCount;
+
+                if (dict.TryGetValue("Throttled", out var throttledCount))
+                    throttled = (long)throttledCount;
+            }
+
+            response.Add(ts, new MetricPoint() { Allowed = allowed, Throttled = throttled });
+        }
+
+        return response;
+    }
 }

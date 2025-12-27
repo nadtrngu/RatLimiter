@@ -14,12 +14,13 @@ public class TokenBucketRateLimiter : IRateLimiter
     public async Task<RateLimitDecision> Check(string apiKey, int cost = 1)
     {
         bool didChange = false;
+        bool isAllowed = false;
         TokenBucketState? state = null;
+        DateTimeOffset now = DateTimeOffset.UtcNow;
         try
         {
             state = await _store.GetAsync(apiKey) ?? throw new UnauthorizedAccessException();
 
-            DateTimeOffset now = DateTimeOffset.UtcNow;
             didChange = RefillTokens(state, now);
 
             if (state.NumberOfTokens < cost)
@@ -27,10 +28,10 @@ public class TokenBucketRateLimiter : IRateLimiter
                 var deficit = cost - state.NumberOfTokens;
                 var seconds = state.RefillRate > 0 ? ((double)deficit / state.RefillRate) : -1; // If refill rate is set to 0, we let the user know that they won't have tokens reset.
                 var resetInSeconds = (int)Math.Ceiling(seconds);
-
+                
                 return new RateLimitDecision()
                 {
-                    Allowed = false,
+                    Allowed = isAllowed,
                     Limit = state.Capacity,
                     RemainingTokens = state.NumberOfTokens,
                     ResetInSeconds = resetInSeconds
@@ -39,12 +40,16 @@ public class TokenBucketRateLimiter : IRateLimiter
 
             state.NumberOfTokens -= cost;
             didChange = true;
-            return new RateLimitDecision() { Allowed = true, Limit = state.Capacity, RemainingTokens = state.NumberOfTokens };
+            isAllowed = true;
+            return new RateLimitDecision() { Allowed = isAllowed, Limit = state.Capacity, RemainingTokens = state.NumberOfTokens };
         }
         finally
         {
             if (state != null && didChange)
+            {
                 await _store.SaveAsync(apiKey, state);
+                await _store.RecordAsync(apiKey, isAllowed, now);
+            }
         }
     }
 
