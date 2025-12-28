@@ -60,6 +60,18 @@ public class ApiKeyService : IApiKeyService
         await _store.UpdateBucketLimitAsync(apiKey, updateLimitRequest, existing);
     }
 
+    public async Task<SortedDictionary<DateTimeOffset, MetricPoint>> GetMetricsDataAsync(string apiKey, DateTimeOffset from, DateTimeOffset to)
+    {
+        if (to <= from)
+            throw new ArgumentException("'to' argument must be after 'from' argument");
+
+            var existing = await _store.GetBucketStateAsync(apiKey);
+        if (existing is null)
+            throw new KeyNotFoundException();
+
+        return await _store.GetRecordAsync(apiKey, from, to);
+    }
+
     private static string GetRandomString()
     {
         string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

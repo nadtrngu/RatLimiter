@@ -58,6 +58,12 @@ public class Function
 
                     return Helpers.GetResponseObj(405, new Dictionary<string, string>() { { "message", "Method not allowed." } });
 
+                case "/v1/api-keys/{key}/metrics":
+                    if (request.HttpMethod == "GET")
+                        return await _functionService.GetMetricsAsync(request);
+
+                    return Helpers.GetResponseObj(405, new Dictionary<string, string>() { { "message", "Method not allowed." } });
+
                 default:
                     return Helpers.GetResponseObj(404, new Dictionary<string, string>() { { "message", "Not Found." } });
             }

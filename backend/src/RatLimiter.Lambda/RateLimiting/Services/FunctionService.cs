@@ -126,5 +126,23 @@ public class FunctionService : IFunctionService
             Description = description.IsNull ? string.Empty : (string)description!
         };
     }
+
+    public async Task<APIGatewayProxyResponse> GetMetricsAsync(APIGatewayProxyRequest request)
+    {
+        if (request.PathParameters == null ||
+            !request.PathParameters.TryGetValue("key", out var key) ||
+            request.QueryStringParameters == null ||
+            !request.QueryStringParameters.TryGetValue("from", out var from) ||
+            !request.QueryStringParameters.TryGetValue("to", out var to))
+        {
+            return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - missing key/from/to" } });
+        }
+
+        if (!DateTimeOffset.TryParse(to, out var dtTo) || !DateTimeOffset.TryParse(from, out var dtFrom))
+            return Helpers.GetResponseObj(400, new Dictionary<string, string>() { { "message", "Bad request - from/to wrong format" } });
+
+        var response = await _keyService.GetMetricsDataAsync(key, dtFrom, dtTo);
+        return Helpers.GetResponseObj(200, response);
+    }
 }
 

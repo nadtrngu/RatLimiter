@@ -8,4 +8,5 @@ public interface IApiKeyService
     Task<IEnumerable<string>> GetAllKeysAsync();
     Task<RedisValue[]> GetTokenBucketConfigAsync(string apiKey);
     Task UpdateKeyLimitAsync(string apiKey, LimitUpdateRequest updateLimitRequest);
+    Task<SortedDictionary<DateTimeOffset, MetricPoint>> GetMetricsDataAsync(string apiKey, DateTimeOffset to, DateTimeOffset from);
 }
